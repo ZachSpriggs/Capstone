@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Link } from 'react-router-dom';
+import api from '../services/api';
 
 export default function RegisterPage() {
   const { login } = useContext(AuthContext);
@@ -12,25 +12,30 @@ export default function RegisterPage() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState('');
   const [agree, setAgree] = useState(false);
-  const navigate = useNavigate();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agree) {
-      setError('You must accept the terms & conditions.');
-      return;
-    }
-    if (password !== confirm) {
-      setError("Passwords don't match.");
-      return;
-    }
-    try {
-      await axios.post('http://localhost:4000/api/auth/register', { name, email, password });
-      await login(email, password);
-    } catch {
-      setError('Registration failed. Email may already exist.');
-    }
-  };
+  e.preventDefault();
+
+  if (!agree) {
+    setError('You must accept the terms & conditions.');
+    return;
+  }
+
+  if (password !== confirm) {
+    setError("Passwords don't match.");
+    return;
+  }
+
+  try {
+    const res = await api.post('/auth/register', { name, email, password });
+    console.log('Register response:', res.data);
+    await login(email, password);
+  } catch (err: any) {
+    console.error('Registration failed:', err.response?.data || err.message);
+    setError(err.response?.data?.error || 'Registration failed. Please try again.');
+  }
+};
 
   return (
     <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4">
