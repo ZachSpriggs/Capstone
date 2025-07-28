@@ -4,15 +4,18 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../prisma';
 
 const SALT_ROUNDS = 10;
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) {
-  throw new Error('Missing JWT_SECRET in environment');
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.log('JWT IS $$$$$$$$$$$$$$$$$$$$:', secret);
+    throw new Error('Missing JWT_SECRET in environment');
+  }
+  return secret;
 }
 
 function signToken(userId: number): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId }, getJwtSecret(), { expiresIn: '1h' });
 }
-
 export async function register(req: Request, res: Response): Promise<void> {
   const { name, email, password } = req.body as {
     name?: string;
