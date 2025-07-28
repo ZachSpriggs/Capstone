@@ -1,0 +1,17 @@
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'http://localhost:4000/api',
+  withCredentials: true,
+});
+
+api.interceptors.request.use(config => {
+  const t = localStorage.getItem('token');
+  if (t && config.headers) {
+    config.headers.Authorization = `Bearer ${t}`;
+  }
+  console.log('→ outgoing auth header:', config.headers?.Authorization);
+  return config;
+});
+
+export default api;
