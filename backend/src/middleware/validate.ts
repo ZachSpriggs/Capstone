@@ -37,15 +37,8 @@ export const validateCategory = [
 
 export function validateAuth(req: Request, res: Response, next: NextFunction): void {
   const { email, password } = req.body;
-
-  if (
-    typeof email !== 'string' ||
-    typeof password !== 'string' ||
-    !email.includes('@') ||
-    password.length < 6
-  ) {
-    res.status(400).json({ error: 'Invalid input' });
-    return; 
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
   }
 
   next();

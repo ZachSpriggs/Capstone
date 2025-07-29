@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
@@ -14,26 +14,40 @@ dotenv.config();
 
 const app = express();
 
-app.use(helmet());
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
-}));
 app.use(express.json());
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://capstone-1-u813.onrender.com',
+    ],
+    credentials: true,
+  })
+);
 
 app.use('/api/auth', authRoutes);
+
 app.use('/api/items', authenticate, itemRoutes);
 app.use('/api/categories', authenticate, categoryRoutes);
 app.use('/api/goals', authenticate, goalRoutes);
 app.use('/api/long-term-goals', authenticate, longTermGoalRoutes);
 
-app.use((req, res) => {
+app.get('/api/ping', authenticate, (req: Request, res: Response) => {
+  res.json({ message: 'Authenticated', userId: req.userId });
+});
+
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Not Found' });
 });
 
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
-});
+app.use(
+  (err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('🔥 Unhandled server error:', err);
+    res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
+  }
+);
 
 export default app;

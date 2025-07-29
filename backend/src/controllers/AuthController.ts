@@ -1,37 +1,20 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { prisma } from '../prisma';
+import { signToken } from '../utils/jwt';
 
 const SALT_ROUNDS = 10;
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    console.log('JWT IS $$$$$$$$$$$$$$$$$$$$:', secret);
-    throw new Error('Missing JWT_SECRET in environment');
-  }
-  return secret;
-}
 
-function signToken(userId: number): string {
-  return jwt.sign({ userId }, getJwtSecret(), { expiresIn: '1h' });
-}
 export async function register(req: Request, res: Response): Promise<void> {
-  const { name, email, password } = req.body as {
-    name?: string;
-    email?: string;
-    password?: string;
-  };
+  const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    res.status(400).json({ error: 'Name, email, and password are all required.' });
-    return;
+    return res.status(400).json({ error: 'Name, email, and password are all required.' });
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    res.status(409).json({ error: 'Email already registered.' });
-    return;
+    return res.status(409).json({ error: 'Email already registered.' });
   }
 
   try {
@@ -51,33 +34,27 @@ export async function register(req: Request, res: Response): Promise<void> {
       },
     });
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error('❌ Registration error:', err);
     res.status(500).json({ error: 'Registration failed.' });
   }
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body as {
-    email?: string;
-    password?: string;
-  };
+  const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(400).json({ error: 'Email and password are required.' });
-    return;
+    return res.status(400).json({ error: 'Email and password are required.' });
   }
 
   try {
     const found = await prisma.user.findUnique({ where: { email } });
     if (!found) {
-      res.status(401).json({ error: 'Invalid credentials.' });
-      return;
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
     const match = await bcrypt.compare(password, found.password);
     if (!match) {
-      res.status(401).json({ error: 'Invalid credentials.' });
-      return;
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
     const token = signToken(found.id);
@@ -91,7 +68,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('❌ Login error:', err);
     res.status(500).json({ error: 'Login failed.' });
   }
 }

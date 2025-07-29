@@ -19,24 +19,36 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+
+    console.log('🧪 Dashboard - current token from context:', token);
+    console.log('🧪 Dashboard - axios auth header:', api.defaults.headers.common['Authorization']);
+
     try {
       const [itemsRes, goalsRes] = await Promise.all([
         api.get('/items'),
         api.get('/long-term-goals'),
       ]);
+
+      console.log('📦 Items response:', itemsRes.data);
+      console.log('🎯 Goals response:', goalsRes.data);
+
       setItems(itemsRes.data);
       setFiltered(itemsRes.data);
       setLongTermGoals(goalsRes.data);
     } catch (err: any) {
+      console.error('Fetch error in Dashboard:', err);
       if (err.response?.status === 401) logout();
-      else console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
-  }, [logout]);
+  }, [logout, token]);
 
   useEffect(() => {
-    if (!token) { logout(); return; }
+    if (!token) {
+      console.warn('No token found, logging out.');
+      logout();
+      return;
+    }
     fetchData();
   }, [token, logout, fetchData]);
 

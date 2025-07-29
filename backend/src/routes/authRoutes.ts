@@ -8,4 +8,5 @@ const router = Router();
 router.post('/register', validateAuth, expressAsyncHandler(register));
 router.post('/login', validateAuth, expressAsyncHandler(login));
 
+
 export default router;
